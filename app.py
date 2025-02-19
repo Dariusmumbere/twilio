@@ -1,6 +1,5 @@
 import json
 import google.generativeai as genai
-import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
@@ -10,16 +9,16 @@ from twilio.twiml.messaging_response import MessagingResponse
 with open("mumbere_darius_profile.json", "r") as file:
     personal_data = json.load(file)
 
-# Twilio Credentials
+# Twilio Credentials (HARD-CODED)
 TWILIO_ACCOUNT_SID = "AC4ba7ceaed874c35acd3b1f5dbc880ba9"
 TWILIO_AUTH_TOKEN = "03f57b5fae10b0e378c9564fb394f14d"
 TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"
 
-# Directly set your API key here
-api_key = "AIzaSyAN23PVrXsIBkYO43JVrXa69hdbRvBqkoY"  # Replace with your actual key
+# Google Gemini API Key (HARD-CODED)
+API_KEY = "AIzaSyAN23PVrXsIBkYO43JVrXa69hdbRvBqkoY"
 
 # Configure Gemini API
-genai.configure(api_key=api_key)
+genai.configure(api_key=API_KEY)
 
 # Initialize conversation history
 conversation_history = []
@@ -27,16 +26,14 @@ conversation_history = []
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
-def send_whatsapp_message(to, message):
-    """Send a WhatsApp message using Twilio."""
-    url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
-    data = {
-        "From": TWILIO_WHATSAPP_NUMBER,
-        "To": to,
-        "Body": message
-    }
-    response = requests.post(url, data=data, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
-    return response.json()
+def ask_gemini(prompt, history):
+    """Get AI-generated responses from Gemini."""
+    try:
+        chat = genai.GenerativeModel("gemini-pro").start_chat(history=history)
+        response = chat.send_message(prompt)
+        return response.text
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 # Flask API
 app = Flask(__name__)
@@ -70,7 +67,7 @@ def whatsapp_webhook():
     # Get AI response
     ai_response = ask_gemini(incoming_msg, conversation_history)
 
-    # Create Twilio response (instead of sending manually)
+    # Create Twilio response (Twilio automatically sends replies)
     twilio_response = MessagingResponse()
     twilio_response.message(ai_response)
 

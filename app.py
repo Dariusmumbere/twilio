@@ -70,10 +70,11 @@ def whatsapp_webhook():
     # Get AI response
     ai_response = ask_gemini(incoming_msg, conversation_history)
 
-    # Send response to WhatsApp
-    send_whatsapp_message(sender, ai_response)
+    # Create Twilio response (instead of sending manually)
+    twilio_response = MessagingResponse()
+    twilio_response.message(ai_response)
 
-    return "OK", 200
+    return str(twilio_response)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

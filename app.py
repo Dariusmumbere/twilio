@@ -3,9 +3,10 @@ import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
+from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
-# Load your personal data
+# Load personal data
 with open("mumbere_darius_profile.json", "r") as file:
     personal_data = json.load(file)
 
@@ -13,6 +14,9 @@ with open("mumbere_darius_profile.json", "r") as file:
 TWILIO_ACCOUNT_SID = "AC4ba7ceaed874c35acd3b1f5dbc880ba9"
 TWILIO_AUTH_TOKEN = "03f57b5fae10b0e378c9564fb394f14d"
 TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"
+
+# Initialize Twilio Client
+twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 # Google Gemini API Key (HARD-CODED)
 API_KEY = "AIzaSyAN23PVrXsIBkYO43JVrXa69hdbRvBqkoY"
@@ -33,7 +37,8 @@ def ask_gemini(prompt, history):
         response = chat.send_message(prompt)
         return response.text
     except Exception as e:
-        return f"Error: {str(e)}"
+        logging.error(f"Gemini API error: {str(e)}")
+        return "I'm currently facing technical issues. Please try again later."
 
 # Flask API
 app = Flask(__name__)
@@ -67,11 +72,15 @@ def whatsapp_webhook():
     # Get AI response
     ai_response = ask_gemini(incoming_msg, conversation_history)
 
-    # Create Twilio response (Twilio automatically sends replies)
-    twilio_response = MessagingResponse()
-    twilio_response.message(ai_response)
+    # Send response via Twilio
+    message = twilio_client.messages.create(
+        body=ai_response,
+        from_=TWILIO_WHATSAPP_NUMBER,
+        to=sender
+    )
 
-    return str(twilio_response)
+    logging.info(f"Sent message to {sender}: {ai_response}")
+    return "Message sent", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

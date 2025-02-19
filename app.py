@@ -12,7 +12,7 @@ with open("mumbere_darius_profile.json", "r") as file:
 
 # Twilio Credentials (HARD-CODED)
 TWILIO_ACCOUNT_SID = "AC4ba7ceaed874c35acd3b1f5dbc880ba9"
-TWILIO_AUTH_TOKEN = "03f57b5fae10b0e378c9564fb394f14d"
+TWILIO_AUTH_TOKEN = "[AuthToken]"
 TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"
 
 # Initialize Twilio Client
